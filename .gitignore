@@ -1,0 +1,6 @@
+
+# Para todos os arquivos e sub-pastas localizados na pasta vendor/
+vendor/
+# 
+composer.json
+composer.lock

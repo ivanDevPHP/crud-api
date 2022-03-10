@@ -1,19 +1,14 @@
 <?php
     class User{
-        // Connection
         private $conn;
-        // Table
         private $db_table = "user";
-        // Columns
         public $id;
         public $name;
         public $age;
-        // Db connection
         public function __construct($db){
             $this->conn = $db;
         }
         
-        // CREATE
         public function create(){
             $this->name=htmlspecialchars(strip_tags($this->name));
             $this->age=htmlspecialchars(strip_tags($this->age));
@@ -28,11 +23,10 @@
             return false;
         }
         
-        // DELETE
         function delete(){
             $this->id=htmlspecialchars(strip_tags($this->id));
             $sqlQuery = "DELETE FROM public.user WHERE id=$this->id;";
-            $stmt = $this->conn->prepare($sqlQuery);
+            $stmt = $this->conn->prepare($sqlQuery);    
             
             if($stmt->execute()){
                 return true;
@@ -40,7 +34,24 @@
             return false;
         }
 
-        // GET AGE
+        function login(){
+            $this->name=htmlspecialchars(strip_tags($this->name));
+            $this->password=htmlspecialchars(strip_tags($this->password));
+            $sqlQuery = "SELECT * FROM public.user WHERE name='$this->name' and password='$this->password';";
+            $stmt = $this->conn->prepare($sqlQuery);
+            $stmt->execute();
+            
+            $dataRow = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if(isset($dataRow['id'])){
+                return true;
+            }else{
+                return false;
+            }
+            
+        }
+
+
         function getAge(){
             $this->id=htmlspecialchars(strip_tags($this->id));
             $sqlQuery = "SELECT id, age FROM public.user WHERE id=$this->id;";
