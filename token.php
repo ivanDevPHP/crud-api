@@ -5,6 +5,14 @@
     use Firebase\JWT\Key;
 
     class Token {
+        private $conn;
+        private $db_table = "token";
+        public $id;
+        public $token;
+        public $valid;
+        public function __construct($db){
+            $this->conn = $db;
+        }
         function generateToken($name){
             $secretKey  = '123';
             $issuedAt   = new DateTimeImmutable();
@@ -40,9 +48,55 @@
             if(isset($decode->error)){
                 return json_encode(["error" => "error", "msg" => $decode->msg]);
             }
+
+            //check if the token is valid or not
+            $blacklist = $this->blacklist($jwt);
+
+            if($blacklist){
+                return json_encode(["error" => "error", "msg" => "token  invalid"]);
+            }
             
             return json_encode(["success" => "success"]);
             
+        }
+
+        function destroy(){
+            $jwt = $this->getToken();
+            if($jwt == null){
+                return json_encode(["error" => "error", "msg" => "no token"]);
+            }
+
+            $jwt = explode("Bearer ", $jwt);
+            $newToken= $jwt[1];
+
+            $sqlQuery = "UPDATE public.token SET valid=0 WHERE token='$newToken'";
+            $stmt = $this->conn->prepare($sqlQuery);
+            $stmt->execute();
+
+            return json_encode(["success" => "success"]);
+        }
+
+        //check if the token is valid or not
+        function blacklist($token){
+            $token = explode("Bearer ", $token);
+            $newToken= $token[1];
+
+            $sqlQuery = "SELECT * FROM public.token WHERE token='$newToken';";
+            $stmt = $this->conn->prepare($sqlQuery);
+            $stmt->execute();
+            $dataRow = $stmt->fetch(PDO::FETCH_ASSOC);
+            if(isset($dataRow['id'])){
+
+                if($dataRow['valid']){
+                    return false;
+                }else{
+                    return true;
+                }
+
+                
+            }else{
+                return false;
+            }
         }
         
         function getToken(){
@@ -53,6 +107,12 @@
                 $headers = trim($requestHeaders['Authorization']);
             }
             return $headers;
+        }
+
+        function saveToken($token){
+            $sqlQuery = "INSERT INTO public.token (token, valid) VALUES ('$token', 1);";
+            $stmt = $this->conn->prepare($sqlQuery);
+            $stmt->execute();
         }
         
         function getTokenDecode($headers){

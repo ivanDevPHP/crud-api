@@ -6,7 +6,7 @@
     $database = new Database();
     $db = $database->getConnection();
     $item = new User($db);
-    $token = new Token();
+    $token = new Token($db);
 
     $token = $token->validation();
     $token = json_decode($token);

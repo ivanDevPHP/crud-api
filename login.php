@@ -9,15 +9,16 @@
     $database = new Database();
     $db = $database->getConnection();
     $item = new User($db);
-    $token = new Token();
+    $jwt = new Token($db);
     
     $data = json_decode(file_get_contents("php://input"));
     $item->name = $data->name;
     $item->password = $data->password;
 
     if($item->login()){
-        $token = $token->generateToken($item->name);
+        $token = $jwt->generateToken($item->name);
         if($token){
+            $jwt->saveToken($token);
             echo json_encode($token);
         }else{
             echo json_encode("ERROR");
